@@ -115,7 +115,7 @@ echo ""
 echo "Installing enhanced VSCode+Kiro extension..."
 if [ -f ~/.local/share/nautilus-python/extensions/code-nautilus.py ]; then
     echo "Copying file..."
-    cp code-nautilus.py ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
+    cp ~/.local/share/nautilus-python/extensions/code-nautilus.py ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
     if [ $? -eq 0 ]; then
         echo "✓ Enhanced extension installed successfully"
     else
