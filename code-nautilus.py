@@ -53,8 +53,13 @@ class VSCodeKiroExtension(GObject.GObject, Nautilus.MenuProvider):
                 if os.path.isdir(filepath):
                     args = '--new-window '
 
-        if NEWWINDOW:
-            args = '--new-window '
+                    # Check if any of the files is a directory
+                    if os.path.isdir(filepath):
+                        has_directory = True
+                        
+                except Exception as e:
+                    invalid_paths.append(f"{filepath} (error: {str(e)})")
+                    continue
 
         if safepaths.strip():  # Only execute if we have valid paths
             try:
@@ -83,6 +88,7 @@ class VSCodeKiroExtension(GObject.GObject, Nautilus.MenuProvider):
                 pass
 
     def get_file_items(self, *args):
+        """Generate menu items for file selection"""
         files = args[-1]
         items = []
         
@@ -109,6 +115,7 @@ class VSCodeKiroExtension(GObject.GObject, Nautilus.MenuProvider):
         return items
 
     def get_background_items(self, *args):
+        """Generate menu items for background (directory) context"""
         file_ = args[-1]
         items = []
         

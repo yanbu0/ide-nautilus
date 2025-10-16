@@ -16,7 +16,7 @@ Before installation, ensure you have the editors you want to use installed and a
 - For VSCode integration: `code` command must be available
 - For Kiro integration: `kiro` command must be available
 
-## Install Extension
+## Features
 
 ```bash
 wget -qO- https://raw.githubusercontent.com/harry-cpp/code-nautilus/master/install.sh | bash
