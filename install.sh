@@ -114,7 +114,7 @@ wget -q -O ~/.local/share/nautilus-python/extensions/code-nautilus.py https://ra
 echo ""
 echo "Installing enhanced VSCode+Kiro extension..."
 if [ -f "code-nautilus.py" ]; then
-    cp code-nautilus.py ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
+    cp ~/.local/share/nautilus-python/extensions/code-nautilus.py ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
     if [ $? -eq 0 ]; then
         echo "✓ Enhanced extension installed successfully"
     else
