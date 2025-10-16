@@ -105,6 +105,11 @@ rm -f ~/.local/share/nautilus-python/extensions/code-nautilus.py
 rm -f ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
 echo "✓ Previous extensions removed"
 
+echo ""
+# Download and install the extension
+echo "Downloading newest version..."
+wget -q -O ~/.local/share/nautilus-python/extensions/code-nautilus.py https://raw.githubusercontent.com/yanbu0/ide-nautilus/master/code-nautilus.py
+
 # Install the enhanced extension
 echo ""
 echo "Installing enhanced VSCode+Kiro extension..."
