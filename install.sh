@@ -108,12 +108,12 @@ echo "✓ Previous extensions removed"
 echo ""
 # Download and install the extension
 echo "Downloading newest version..."
-wget -q -O code-nautilus.py https://raw.githubusercontent.com/yanbu0/ide-nautilus/master/code-nautilus.py
+wget -q -O ~/.local/share/nautilus-python/extensions/code-nautilus.py https://raw.githubusercontent.com/yanbu0/ide-nautilus/master/code-nautilus.py
 
 # Install the enhanced extension
 echo ""
 echo "Installing enhanced VSCode+Kiro extension..."
-if [ -f "code-nautilus.py" ]; then
+if [ -f "~/.local/share/nautilus-python/extensions/code-nautilus.py" ]; then
     echo "Copying file..."
     cp code-nautilus.py ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
     if [ $? -eq 0 ]; then
