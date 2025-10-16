@@ -46,6 +46,7 @@ class VSCodeKiroExtension(GObject.GObject, Nautilus.MenuProvider):
         for file in files:
             filepath = file.get_location().get_path()
             if filepath and os.path.exists(filepath):
+                try:
                 safepaths += self._quote_path(filepath) + ' '
 
                 # If one of the files we are trying to open is a folder
