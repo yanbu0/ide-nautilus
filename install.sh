@@ -1,113 +1,13 @@
 #!/bin/bash
 
-# Default wget flags
-DEFAULT_WGET_FLAGS="-q"
-WGET_FLAGS="$DEFAULT_WGET_FLAGS"
-
-# Function to display help
-show_help() {
-    cat << EOF
-Usage: $0 [OPTIONS]
-
-Install code-nautilus extension for Nautilus file manager with VSCode and Kiro support.
-
-OPTIONS:
-    --wget-flags "FLAGS"    Specify custom wget flags for downloading the extension
-                           Example: --wget-flags "-v --timeout=30"
-                           Default: "-q" (quiet mode)
-    -h, --help             Display this help message
-
-EXAMPLES:
-    $0                                    # Install with default settings
-    $0 --wget-flags "-v"                 # Install with verbose wget output
-    $0 --wget-flags "--timeout=30 -q"    # Install with custom timeout and quiet mode
-
-NOTES:
-    - The script maintains backward compatibility when no flags are specified
-    - Only safe wget flags are allowed for security reasons
-    - Unsafe flags like --output-document with system paths are blocked
-
-EOF
+# Function to check if a command is available in PATH
+check_command() {
+    if command -v "$1" >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
 }
-
-# Function to validate wget flags
-validate_wget_flags() {
-    local flags="$1"
-    
-    # Check for potentially unsafe flags
-    if echo "$flags" | grep -qE "(--output-document=/|--output-document ~/|--output-document /tmp)"; then
-        echo "Error: Unsafe wget flag detected in: $flags"
-        echo "Output redirection to system directories is not allowed for security reasons."
-        echo "Use --help for more information about safe wget flags."
-        return 1
-    fi
-    
-    if echo "$flags" | grep -qE "(--directory-prefix=/|--directory-prefix ~/|--directory-prefix /tmp)"; then
-        echo "Error: Unsafe wget flag detected in: $flags"
-        echo "Directory prefix to system directories is not allowed for security reasons."
-        echo "Use --help for more information about safe wget flags."
-        return 1
-    fi
-    
-    if echo "$flags" | grep -qE "(--input-file|--force-html|--base|--config)"; then
-        echo "Error: Unsafe wget flag detected in: $flags"
-        echo "File input/output and configuration flags are not allowed for security reasons."
-        echo "Use --help for more information about safe wget flags."
-        return 1
-    fi
-    
-    if echo "$flags" | grep -qE "(--execute|--post-data|--post-file)"; then
-        echo "Error: Unsafe wget flag detected in: $flags"
-        echo "Code execution and POST data flags are not allowed for security reasons."
-        echo "Use --help for more information about safe wget flags."
-        return 1
-    fi
-    
-    if echo "$flags" | grep -qE "(--load-cookies|--save-cookies|--certificate|--private-key)"; then
-        echo "Error: Unsafe wget flag detected in: $flags"
-        echo "Cookie and certificate handling flags are not allowed for security reasons."
-        echo "Use --help for more information about safe wget flags."
-        return 1
-    fi
-    
-    # Check if flags start with dash (basic validation)
-    if [[ -n "$flags" && ! "$flags" =~ ^[[:space:]]*- ]]; then
-        echo "Error: wget flags must start with '-' or '--'"
-        echo "Example: --wget-flags \"-v --timeout=30\""
-        return 1
-    fi
-    
-    return 0
-}
-
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --wget-flags)
-            if [[ -n "$2" ]]; then
-                if validate_wget_flags "$2"; then
-                    WGET_FLAGS="$2"
-                else
-                    exit 1
-                fi
-                shift 2
-            else
-                echo "Error: --wget-flags requires a value"
-                echo "Use --help for usage information"
-                exit 1
-            fi
-            ;;
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        *)
-            echo "Error: Unknown option $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
-    esac
-done
 
 # Install python-nautilus
 echo "Installing python-nautilus..."
@@ -118,8 +18,14 @@ then
     if [ `echo $?` -eq 1 ]
     then
         sudo pacman -S --noconfirm python-nautilus
+        if [ $? -eq 0 ]; then
+            echo "✓ python-nautilus installed successfully"
+        else
+            echo "✗ Failed to install python-nautilus"
+            exit 1
+        fi
     else
-        echo "python-nautilus is already installed"
+        echo "✓ python-nautilus is already installed"
     fi
 elif type "apt-get" > /dev/null 2>&1
 then
@@ -136,8 +42,14 @@ then
     if [ -z "$installed" ]
     then
         sudo apt-get install -y $package_name
+        if [ $? -eq 0 ]; then
+            echo "✓ $package_name installed successfully"
+        else
+            echo "✗ Failed to install $package_name"
+            exit 1
+        fi
     else
-        echo "$package_name is already installed."
+        echo "✓ $package_name is already installed"
     fi
 elif type "dnf" > /dev/null 2>&1
 then
@@ -145,26 +57,90 @@ then
     if [ -z "$installed" ]
     then
         sudo dnf install -y nautilus-python
+        if [ $? -eq 0 ]; then
+            echo "✓ nautilus-python installed successfully"
+        else
+            echo "✗ Failed to install nautilus-python"
+            exit 1
+        fi
     else
-        echo "nautilus-python is already installed."
+        echo "✓ nautilus-python is already installed"
     fi
 else
-    echo "Failed to find python-nautilus, please install it manually."
+    echo "✗ Failed to find python-nautilus, please install it manually."
+    exit 1
 fi
 
-# Remove previous version and setup folder
-echo "Removing previous version (if found)..."
+# Check for VSCode and Kiro commands
+echo ""
+echo "Checking for editor commands..."
+vscode_available=false
+kiro_available=false
+
+if check_command "code"; then
+    echo "✓ VSCode command 'code' found in PATH"
+    vscode_available=true
+else
+    echo "⚠ VSCode command 'code' not found in PATH"
+fi
+
+if check_command "kiro"; then
+    echo "✓ Kiro command 'kiro' found in PATH"
+    kiro_available=true
+else
+    echo "⚠ Kiro command 'kiro' not found in PATH"
+fi
+
+if [ "$vscode_available" = false ] && [ "$kiro_available" = false ]; then
+    echo "✗ Neither VSCode nor Kiro commands are available. Please install at least one editor."
+    exit 1
+fi
+
+# Remove previous versions and setup folder
+echo ""
+echo "Removing previous extensions (if found)..."
 mkdir -p ~/.local/share/nautilus-python/extensions
 rm -f ~/.local/share/nautilus-python/extensions/VSCodeExtension.py
 rm -f ~/.local/share/nautilus-python/extensions/code-nautilus.py
+rm -f ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
+echo "✓ Previous extensions removed"
 
-# Download and install the extension
-echo "Downloading newest version..."
-echo "Using wget flags: $WGET_FLAGS"
-wget $WGET_FLAGS -O ~/.local/share/nautilus-python/extensions/code-nautilus.py https://raw.githubusercontent.com/harry-cpp/code-nautilus/master/code-nautilus.py
+# Install the enhanced extension
+echo ""
+echo "Installing enhanced VSCode+Kiro extension..."
+if [ -f "code-nautilus.py" ]; then
+    cp code-nautilus.py ~/.local/share/nautilus-python/extensions/kiro-nautilus.py
+    if [ $? -eq 0 ]; then
+        echo "✓ Enhanced extension installed successfully"
+    else
+        echo "✗ Failed to install enhanced extension"
+        exit 1
+    fi
+else
+    echo "✗ Enhanced extension file 'code-nautilus.py' not found in current directory"
+    exit 1
+fi
 
 # Restart nautilus
-echo "Restarting nautilus..."
+echo ""
+echo "Restarting Nautilus..."
 nautilus -q
+if [ $? -eq 0 ]; then
+    echo "✓ Nautilus restarted successfully"
+else
+    echo "⚠ Failed to restart Nautilus - you may need to restart it manually"
+fi
 
-echo "Installation Complete"
+echo ""
+echo "=== Installation Complete ==="
+echo ""
+echo "Available features:"
+if [ "$vscode_available" = true ]; then
+    echo "  ✓ Open in VSCode (right-click context menu)"
+fi
+if [ "$kiro_available" = true ]; then
+    echo "  ✓ Open in Kiro (right-click context menu)"
+fi
+echo ""
+echo "The extension will automatically detect which editors are available"
+echo "and show the appropriate menu items in Nautilus."

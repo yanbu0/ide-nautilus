@@ -1,82 +1,32 @@
 # code-nautilus
 
-This repo provides IDE extensions for Nautilus file manager, supporting both Visual Studio Code and Kiro IDE. Right-click on files or folders in Nautilus to open them directly in your preferred IDE.
+This repo provides Nautilus extensions for both Visual Studio Code and Kiro IDE integration. Right-click on any file or directory in Nautilus to open it directly in your preferred editor.
 
 ## Features
 
-- **Dual IDE Support**: Open files and folders in both Visual Studio Code and Kiro IDE
-- **Context Menu Integration**: Right-click context menu options for quick IDE access
-- **Configurable Installation**: Customize wget behavior during installation
-- **Backward Compatibility**: Existing installations continue to work without modification
+- **Open in Code**: Launch Visual Studio Code with selected files/directories
+- **Open in Kiro**: Launch Kiro IDE with selected files/directories
+- **Multiple Selection Support**: Open multiple files or directories at once
+- **Background Context Menu**: Right-click in empty space to open current directory
 
-## Requirements
+## Prerequisites
 
-### System Requirements
-- Linux system with Nautilus file manager
-- Python 3.x with nautilus-python extension support
+Before installation, ensure you have the editors you want to use installed and available in your PATH:
 
-### IDE Requirements
-- **Visual Studio Code**: Install from [official website](https://code.visualstudio.com/) or package manager
-- **Kiro IDE**: Install Kiro IDE for AI-powered development features (optional)
+- For VSCode integration: `code` command must be available
+- For Kiro integration: `kiro` command must be available
 
-Both IDEs are detected automatically. If an IDE is not installed, its menu option will handle the error gracefully.
+## Features
 
-## Installation
-
-### Quick Install (Default)
 ```bash
 wget -qO- https://raw.githubusercontent.com/harry-cpp/code-nautilus/master/install.sh | bash
 ```
 
-### Custom Installation with Wget Flags
-You can customize the download behavior by specifying wget flags:
-
-```bash
-# Download and run with custom wget flags
-wget -qO- https://raw.githubusercontent.com/harry-cpp/code-nautilus/master/install.sh | bash -s -- --wget-flags "-v --timeout=30"
-
-# Or download the script first and run with flags
-wget https://raw.githubusercontent.com/harry-cpp/code-nautilus/master/install.sh
-chmod +x install.sh
-./install.sh --wget-flags "-v --progress=bar"
-```
-
-### Installation Examples
-
-**Verbose output with progress bar:**
-```bash
-./install.sh --wget-flags "-v --progress=bar"
-```
-
-**Custom timeout and retry settings:**
-```bash
-./install.sh --wget-flags "--timeout=60 --tries=3"
-```
-
-**Quiet installation (default behavior):**
-```bash
-./install.sh
-# Equivalent to: ./install.sh --wget-flags "-q"
-```
-
-### Installation Help
-```bash
-./install.sh --help
-```
-
-## Usage
-
-After installation, restart Nautilus or log out and back in. Then:
-
-1. **Right-click** on any file or folder in Nautilus
-2. Select **"Open in Code"** to open in Visual Studio Code
-3. Select **"Open in Kiro"** to open in Kiro IDE (if installed)
-
-### Supported Actions
-- Open individual files in either IDE
-- Open entire folders/directories as IDE workspaces
-- Multiple file selection support
-- Graceful error handling for missing IDEs
+The installation script will:
+- Install required dependencies (`python-nautilus`)
+- Copy the extension to the correct Nautilus directory
+- Restart Nautilus to load the extension
+- Verify that editor commands are available in PATH
 
 ## Uninstall Extension
 
@@ -84,19 +34,101 @@ After installation, restart Nautilus or log out and back in. Then:
 rm -f ~/.local/share/nautilus-python/extensions/code-nautilus.py
 ```
 
+After uninstalling, restart Nautilus:
+```bash
+nautilus -q && nautilus &
+```
+
+## Usage
+
+1. Open Nautilus file manager
+2. Navigate to any file or directory
+3. Right-click to open the context menu
+4. Select either:
+   - **"Open in Code"** to launch Visual Studio Code
+   - **"Open in Kiro"** to launch Kiro IDE
+
 ## Troubleshooting
 
-### IDE Not Opening
-- Ensure the IDE is properly installed and available in your system PATH
-- Check that the IDE command (`code` for VSCode, `kiro` for Kiro) works in terminal
-- Restart Nautilus after installation: `nautilus -q && nautilus &`
+### Extension not appearing in context menu
 
-### Menu Items Not Appearing
-- Verify nautilus-python is installed: `python3 -c "import gi; gi.require_version('Nautilus', '3.0')"`
-- Check extension file exists: `ls ~/.local/share/nautilus-python/extensions/code-nautilus.py`
-- Restart Nautilus or log out/in
+1. **Check if python-nautilus is installed:**
+   ```bash
+   # On Ubuntu/Debian
+   sudo apt list --installed | grep python-nautilus
+   
+   # On Arch Linux
+   pacman -Q python-nautilus
+   
+   # On Fedora
+   rpm -qa | grep nautilus-python
+   ```
 
-### Installation Issues
-- Ensure you have write permissions to `~/.local/share/nautilus-python/extensions/`
-- Check network connectivity if wget fails
-- Try installation with verbose flags: `./install.sh --wget-flags "-v"`
+2. **Verify extension file exists:**
+   ```bash
+   ls -la ~/.local/share/nautilus-python/extensions/code-nautilus.py
+   ```
+
+3. **Restart Nautilus:**
+   ```bash
+   nautilus -q && nautilus &
+   ```
+
+### "Open in Code" or "Open in Kiro" not working
+
+1. **Check if the editor command is in PATH:**
+   ```bash
+   # For VSCode
+   which code
+   
+   # For Kiro
+   which kiro
+   ```
+
+2. **Test the command manually:**
+   ```bash
+   # For VSCode
+   code /path/to/your/file
+   
+   # For Kiro
+   kiro /path/to/your/file
+   ```
+
+3. **Install missing editors:**
+   - **VSCode**: Follow instructions at https://code.visualstudio.com/docs/setup/linux
+   - **Kiro**: Follow Kiro installation instructions for your system
+
+### Permission issues
+
+If you encounter permission errors during installation:
+
+1. **Ensure extensions directory exists:**
+   ```bash
+   mkdir -p ~/.local/share/nautilus-python/extensions/
+   ```
+
+2. **Check directory permissions:**
+   ```bash
+   ls -la ~/.local/share/nautilus-python/
+   ```
+
+### Extension installed but menu items missing
+
+1. **Check Python dependencies:**
+   ```bash
+   python3 -c "import gi; gi.require_version('Nautilus', '3.0'); from gi.repository import Nautilus"
+   ```
+
+2. **Verify extension syntax:**
+   ```bash
+   python3 -m py_compile ~/.local/share/nautilus-python/extensions/code-nautilus.py
+   ```
+
+3. **Check Nautilus logs:**
+   ```bash
+   journalctl --user -u nautilus --since "1 hour ago"
+   ```
+
+## Contributing
+
+Feel free to submit issues and pull requests to improve the extension.
